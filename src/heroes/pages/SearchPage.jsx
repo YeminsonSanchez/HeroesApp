@@ -1,27 +1,28 @@
 import { useLocation, useNavigate } from "react-router-dom";
-import { useForm } from "../../hooks/useForm";
-import { HeroCard } from "../components/HeroCard";
 import queryString from "query-string";
+import { useForm } from "../../hooks/useForm";
+import { HeroCard } from "../components";
+import { getHeroesByName } from "../helpers";
 
 export const SearchPage = () => {
   const navigate = useNavigate();
-
   const location = useLocation();
+  const { q = "" } = queryString.parse(location.search);
+  const heroes = getHeroesByName(q);
 
-  // TODO: Hay que corregir el queryString que lo llega el key correcto
-  const query = queryString.parse(location.search);
-  const { searchText, formState, onInputChange, onResetForm } = useForm({
-    searchText: "",
+  const showSearch = q.length === 0;
+  const showError = q.length > 0 && heroes.length === 0;
+
+  const { searchText, onInputChange, onResetForm } = useForm({
+    searchText: q,
   });
 
-  console.log(query);
   const onSearch = (e) => {
     e.preventDefault();
-
-    if (searchText.trim().length <= 1) return;
-
-    navigate(`?=${searchText}`);
+    // if (searchText.trim().length <= 1) return;
+    navigate(`?q=${searchText}`);
   };
+
   return (
     <>
       <h1>Search</h1>
@@ -32,7 +33,7 @@ export const SearchPage = () => {
           <form onSubmit={onSearch}>
             <input
               type="text"
-              placeholder="Search hero"
+              placeholder="Search a hero"
               className="form-control"
               name="searchText"
               autoComplete="off"
@@ -45,13 +46,21 @@ export const SearchPage = () => {
         <div className="col-7">
           <h4>Results</h4>
           <hr />
-
-          {/* <HeroCard /> */}
-
-          <div className="alert alert-primary">Hero information</div>
-          <div className="alert alert-danger">
-            Not hero <b> {query.q}</b>
+          <div
+            className="alert alert-primary animate__animated animate__fadeIn"
+            style={{ display: showSearch ? "" : "none" }}
+          >
+            Hero information
           </div>
+          <div
+            className="alert alert-danger animate__animated animate__fadeIn"
+            style={{ display: showError ? "" : "none" }}
+          >
+            Not hero <b>{q}</b>
+          </div>
+          {heroes.map((hero) => (
+            <HeroCard key={hero.id} {...hero} />
+          ))}
         </div>
       </div>
     </>
